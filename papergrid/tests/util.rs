@@ -9,18 +9,18 @@ use papergrid::{
     Borders, Estimate, Grid, GridConfig, Position,
 };
 
-pub fn grid(rows: usize, cols: usize) -> GridBuilder {
+pub fn grid<'a>(rows: usize, cols: usize) -> GridBuilder<'a> {
     GridBuilder::new(rows, cols)
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct GridBuilder {
+pub struct GridBuilder<'a> {
     size: (usize, usize),
-    cfg: GridConfig,
+    cfg: GridConfig<'a>,
     data: HashMap<Position, String>,
 }
 
-impl GridBuilder {
+impl<'a> GridBuilder<'a> {
     pub fn new(rows: usize, cols: usize) -> Self {
         let mut cfg = GridConfig::default();
         cfg.set_borders(DEFAULT_BORDERS);
@@ -71,7 +71,7 @@ impl GridBuilder {
 fn build_grid(
     rows: usize,
     cols: usize,
-    cfg: GridConfig,
+    cfg: GridConfig<'static>,
     data: Vec<Vec<String>>,
 ) -> Grid<'static, &'static VecRecords<CellInfo<'static>>, WidthEstimator, HeightEstimator> {
     let cfg = Box::leak(Box::new(cfg));

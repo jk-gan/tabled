@@ -1,23 +1,40 @@
-use std::fmt::{self, Display, Formatter};
+use std::{
+    borrow::Cow,
+    fmt::{self, Display, Formatter},
+};
 
 use super::Color;
 
 /// The structure represents a ANSI color by suffix and prefix.
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
-pub struct AnsiColor {
-    prefix: String,
-    suffix: String,
+pub struct AnsiColor<'a> {
+    prefix: Cow<'a, str>,
+    suffix: Cow<'a, str>,
 }
 
-impl AnsiColor {
+impl<'a> AnsiColor<'a> {
     /// Constructs a new instance with suffix and prefix.
     ///
     /// They are not checked so you should make sure you provide correct ANSI.
     /// Otherwise you may want to use [`TryFrom`].
     ///
     /// [`TryFrom`]: std::convert::TryFrom
-    pub fn new(prefix: String, suffix: String) -> Self {
-        Self { prefix, suffix }
+    // pub fn new(prefix: String, suffix: String) -> Self {
+    //     Self { prefix, suffix }
+    // }
+
+    pub fn new_owned(prefix: String, suffix: String) -> Self {
+        Self {
+            prefix: Cow::Owned(prefix),
+            suffix: Cow::Owned(suffix),
+        }
+    }
+
+    pub fn new_borrows(prefix: &'a str, suffix: &'a str) -> Self {
+        Self {
+            prefix: Cow::Borrowed(prefix),
+            suffix: Cow::Borrowed(suffix),
+        }
     }
 
     /// Gets a reference to a prefix.
@@ -31,7 +48,7 @@ impl AnsiColor {
     }
 }
 
-impl std::convert::TryFrom<&str> for AnsiColor {
+impl<'a> std::convert::TryFrom<&str> for AnsiColor<'a> {
     type Error = ();
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
@@ -39,7 +56,7 @@ impl std::convert::TryFrom<&str> for AnsiColor {
     }
 }
 
-impl std::convert::TryFrom<String> for AnsiColor {
+impl<'a> std::convert::TryFrom<String> for AnsiColor<'a> {
     type Error = ();
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
@@ -47,7 +64,7 @@ impl std::convert::TryFrom<String> for AnsiColor {
     }
 }
 
-impl Color for AnsiColor {
+impl<'a> Color for AnsiColor<'a> {
     fn fmt_prefix(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.prefix.fmt(f)
     }
@@ -57,12 +74,12 @@ impl Color for AnsiColor {
     }
 }
 
-fn parse_ansi_color(s: &str) -> Option<AnsiColor> {
+fn parse_ansi_color<'a>(s: &str) -> Option<AnsiColor<'a>> {
     let mut blocks = ansi_str::get_blocks(s);
     let block = blocks.next()?;
 
     let start = block.start().to_string();
     let end = block.end().to_string();
 
-    Some(AnsiColor::new(start, end))
+    Some(AnsiColor::new_owned(start, end))
 }

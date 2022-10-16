@@ -24,7 +24,7 @@ const DEFAULT_BORDER_HORIZONTAL_CHAR: char = ' ';
 /// Grid provides a set of methods for building a text-based table.
 #[derive(Debug, Clone)]
 pub struct Grid<'a, R, W, H> {
-    config: &'a GridConfig,
+    config: &'a GridConfig<'a>,
     width: &'a W,
     height: &'a H,
     records: R,
@@ -32,7 +32,7 @@ pub struct Grid<'a, R, W, H> {
 
 impl<'a, R, W, H> Grid<'a, R, W, H> {
     /// The new method creates a grid instance with default styles.
-    pub fn new(records: R, config: &'a GridConfig, width: &'a W, height: &'a H) -> Self {
+    pub fn new(records: R, config: &'a GridConfig<'a>, width: &'a W, height: &'a H) -> Self {
         Grid {
             config,
             width,
@@ -59,7 +59,7 @@ where
 
 fn print_grid<R, W, H>(
     f: &mut fmt::Formatter<'_>,
-    cfg: &GridConfig,
+    cfg: &GridConfig<'_>,
     records: &R,
     width: &W,
     height: &H,
@@ -83,7 +83,7 @@ mod print_general {
 
     pub(super) fn print_grid<R, W, H>(
         f: &mut fmt::Formatter<'_>,
-        cfg: &GridConfig,
+        cfg: &GridConfig<'_>,
         records: &R,
         width: &W,
         height: &H,
@@ -169,7 +169,7 @@ mod print_general {
 
     fn print_split_line<R, W>(
         f: &mut fmt::Formatter<'_>,
-        cfg: &GridConfig,
+        cfg: &GridConfig<'_>,
         records: &R,
         width_ctrl: &W,
         row: usize,
@@ -324,7 +324,7 @@ mod print_spanned {
 
     pub(super) fn print_grid<R, W, H>(
         f: &mut fmt::Formatter<'_>,
-        cfg: &GridConfig,
+        cfg: &GridConfig<'_>,
         records: &R,
         width: &W,
         height: &H,
@@ -441,7 +441,7 @@ mod print_spanned {
     #[allow(clippy::too_many_arguments)]
     fn print_split_line<R, W, H>(
         f: &mut fmt::Formatter<'_>,
-        cfg: &GridConfig,
+        cfg: &GridConfig<'_>,
         records: &R,
         width_ctrl: &W,
         height_ctrl: &H,
@@ -624,7 +624,7 @@ mod print_spanned {
 
     fn print_cell_line<R, W, H>(
         f: &mut fmt::Formatter<'_>,
-        cfg: &GridConfig,
+        cfg: &GridConfig<'_>,
         records: &R,
         width: &W,
         height: &H,
@@ -644,7 +644,7 @@ mod print_spanned {
 
 fn print_horizontal_border(
     f: &mut fmt::Formatter<'_>,
-    cfg: &GridConfig,
+    cfg: &GridConfig<'_>,
     pos: Position,
     width: usize,
     c: char,
@@ -664,7 +664,7 @@ fn print_horizontal_border(
 
 fn print_cell_line<R>(
     f: &mut fmt::Formatter<'_>,
-    cfg: &GridConfig,
+    cfg: &GridConfig<'_>,
     records: &R,
     width: usize,
     height: usize,
@@ -860,8 +860,8 @@ fn print_text(f: &mut fmt::Formatter<'_>, text: &str, tab_width: usize) -> fmt::
 #[cfg(feature = "color")]
 fn prepare_coloring<'a>(
     f: &mut fmt::Formatter<'_>,
-    clr: Option<&'a AnsiColor>,
-    used_color: &mut Option<&'a AnsiColor>,
+    clr: Option<&'a AnsiColor<'a>>,
+    used_color: &mut Option<&'a AnsiColor<'a>>,
 ) -> fmt::Result {
     match clr {
         Some(clr) => match used_color.as_mut() {
@@ -954,7 +954,7 @@ fn repeat_char(f: &mut fmt::Formatter<'_>, c: char, n: usize) -> fmt::Result {
 }
 
 // only valid to call for stabilized widths.
-fn total_width<R, W>(cfg: &GridConfig, records: &R, width: &W) -> usize
+fn total_width<R, W>(cfg: &GridConfig<'_>, records: &R, width: &W) -> usize
 where
     W: Estimate<R>,
     R: Records,
@@ -967,7 +967,7 @@ where
 
 fn print_vertical_char<R>(
     f: &mut fmt::Formatter<'_>,
-    cfg: &GridConfig,
+    cfg: &GridConfig<'_>,
     records: &R,
     pos: Position,
     line_index: usize,
@@ -1003,7 +1003,7 @@ where
     Ok(())
 }
 
-fn print_margin_top(f: &mut fmt::Formatter<'_>, cfg: &GridConfig, width: usize) -> fmt::Result {
+fn print_margin_top(f: &mut fmt::Formatter<'_>, cfg: &GridConfig<'_>, width: usize) -> fmt::Result {
     print_indent_lines(
         f,
         &cfg.get_margin().top,
@@ -1013,7 +1013,11 @@ fn print_margin_top(f: &mut fmt::Formatter<'_>, cfg: &GridConfig, width: usize) 
     )
 }
 
-fn print_margin_bottom(f: &mut fmt::Formatter<'_>, cfg: &GridConfig, width: usize) -> fmt::Result {
+fn print_margin_bottom(
+    f: &mut fmt::Formatter<'_>,
+    cfg: &GridConfig<'_>,
+    width: usize,
+) -> fmt::Result {
     print_indent_lines(
         f,
         &cfg.get_margin().bottom,
@@ -1023,7 +1027,7 @@ fn print_margin_bottom(f: &mut fmt::Formatter<'_>, cfg: &GridConfig, width: usiz
     )
 }
 
-fn print_margin_left(f: &mut fmt::Formatter<'_>, cfg: &GridConfig) -> fmt::Result {
+fn print_margin_left(f: &mut fmt::Formatter<'_>, cfg: &GridConfig<'_>) -> fmt::Result {
     print_indent(
         f,
         cfg.get_margin().left.fill,
@@ -1033,7 +1037,7 @@ fn print_margin_left(f: &mut fmt::Formatter<'_>, cfg: &GridConfig) -> fmt::Resul
     )
 }
 
-fn print_margin_right(f: &mut fmt::Formatter<'_>, cfg: &GridConfig) -> fmt::Result {
+fn print_margin_right(f: &mut fmt::Formatter<'_>, cfg: &GridConfig<'_>) -> fmt::Result {
     print_indent(
         f,
         cfg.get_margin().right.fill,
@@ -1047,7 +1051,7 @@ fn print_indent_lines(
     f: &mut fmt::Formatter<'_>,
     indent: &Indent,
     width: usize,
-    #[cfg(feature = "color")] color: &AnsiColor,
+    #[cfg(feature = "color")] color: &AnsiColor<'_>,
 ) -> fmt::Result {
     for i in 0..indent.size {
         print_indent(
@@ -1070,7 +1074,7 @@ fn print_indent(
     f: &mut fmt::Formatter<'_>,
     c: char,
     n: usize,
-    #[cfg(feature = "color")] color: &AnsiColor,
+    #[cfg(feature = "color")] color: &AnsiColor<'_>,
 ) -> fmt::Result {
     #[cfg(feature = "color")]
     color.fmt_prefix(f)?;
@@ -1081,7 +1085,7 @@ fn print_indent(
     Ok(())
 }
 
-fn grid_cell_width<R, W>(cfg: &GridConfig, records: &R, width: &W, pos: Position) -> usize
+fn grid_cell_width<R, W>(cfg: &GridConfig<'_>, records: &R, width: &W, pos: Position) -> usize
 where
     R: Records,
     W: Estimate<R>,
@@ -1092,7 +1096,13 @@ where
     }
 }
 
-fn range_width<R, W>(cfg: &GridConfig, records: &R, width: &W, start: usize, end: usize) -> usize
+fn range_width<R, W>(
+    cfg: &GridConfig<'_>,
+    records: &R,
+    width: &W,
+    start: usize,
+    end: usize,
+) -> usize
 where
     R: Records,
     W: Estimate<R>,
@@ -1105,7 +1115,7 @@ where
 }
 
 fn count_borders_in_range(
-    cfg: &GridConfig,
+    cfg: &GridConfig<'_>,
     start: usize,
     end: usize,
     count_columns: usize,
@@ -1116,7 +1126,7 @@ fn count_borders_in_range(
         .count()
 }
 
-fn grid_cell_height<R, H>(cfg: &GridConfig, records: &R, height: &H, pos: Position) -> usize
+fn grid_cell_height<R, H>(cfg: &GridConfig<'_>, records: &R, height: &H, pos: Position) -> usize
 where
     R: Records,
     H: Estimate<R>,
@@ -1127,7 +1137,13 @@ where
     }
 }
 
-fn range_height<R, H>(cfg: &GridConfig, records: &R, height: &H, start: usize, end: usize) -> usize
+fn range_height<R, H>(
+    cfg: &GridConfig<'_>,
+    records: &R,
+    height: &H,
+    start: usize,
+    end: usize,
+) -> usize
 where
     R: Records,
     H: Estimate<R>,
@@ -1141,7 +1157,7 @@ where
 }
 
 fn count_horizontal_borders_in_range(
-    cfg: &GridConfig,
+    cfg: &GridConfig<'_>,
     start: usize,
     end: usize,
     count_rows: usize,
@@ -1153,7 +1169,7 @@ fn count_horizontal_borders_in_range(
 }
 
 fn closest_visible_row(
-    cfg: &GridConfig,
+    cfg: &GridConfig<'_>,
     mut pos: Position,
     shape: (usize, usize),
 ) -> Option<usize> {
@@ -1170,28 +1186,28 @@ fn closest_visible_row(
     }
 }
 
-fn get_vertical<R>(cfg: &GridConfig, records: R, pos: Position) -> Option<&char>
+fn get_vertical<'a, R>(cfg: &'a GridConfig<'a>, records: R, pos: Position) -> Option<&'a char>
 where
     R: Records,
 {
     cfg.get_vertical(pos, records.count_columns())
 }
 
-fn get_horizontal<R>(cfg: &GridConfig, records: R, pos: Position) -> Option<&char>
+fn get_horizontal<'a, R>(cfg: &'a GridConfig<'a>, records: R, pos: Position) -> Option<&'a char>
 where
     R: Records,
 {
     cfg.get_horizontal(pos, records.count_rows())
 }
 
-fn get_intersection<R>(cfg: &GridConfig, records: R, pos: Position) -> Option<&char>
+fn get_intersection<'a, R>(cfg: &'a GridConfig<'a>, records: R, pos: Position) -> Option<&'a char>
 where
     R: Records,
 {
     cfg.get_intersection(pos, (records.count_rows(), records.count_columns()))
 }
 
-fn has_horizontal<R>(cfg: &GridConfig, records: R, row: usize) -> bool
+fn has_horizontal<R>(cfg: &GridConfig<'_>, records: R, row: usize) -> bool
 where
     R: Records,
 {
@@ -1199,7 +1215,11 @@ where
 }
 
 #[cfg(feature = "color")]
-fn get_intersection_color<R>(cfg: &GridConfig, records: R, pos: Position) -> Option<&AnsiColor>
+fn get_intersection_color<'a, R>(
+    cfg: &'a GridConfig<'a>,
+    records: R,
+    pos: Position,
+) -> Option<&'a AnsiColor<'a>>
 where
     R: Records,
 {
@@ -1207,7 +1227,11 @@ where
 }
 
 #[cfg(feature = "color")]
-fn get_vertical_color<R>(cfg: &GridConfig, records: R, pos: Position) -> Option<&AnsiColor>
+fn get_vertical_color<'a, R>(
+    cfg: &'a GridConfig<'a>,
+    records: R,
+    pos: Position,
+) -> Option<&'a AnsiColor<'a>>
 where
     R: Records,
 {
@@ -1215,7 +1239,11 @@ where
 }
 
 #[cfg(feature = "color")]
-fn get_horizontal_color<R>(cfg: &GridConfig, records: R, pos: Position) -> Option<&AnsiColor>
+fn get_horizontal_color<'a, R>(
+    cfg: &'a GridConfig<'a>,
+    records: R,
+    pos: Position,
+) -> Option<&'a AnsiColor<'a>>
 where
     R: Records,
 {
